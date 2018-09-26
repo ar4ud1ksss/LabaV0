@@ -24,7 +24,7 @@ const float Length2    = 30;
                                         ///Long of wire 3 (cm)
 const float Length3    = 50;            
                                         ///Max value ampermeter (mA)
-const int MaxI         = 300.01;           
+const int MaxI         = 301;           
                                         ///Max value voltmeter (mV)
 const int MaxU         = 601;
                                         ///Tolerance 
@@ -33,7 +33,7 @@ const float Tolerance  = 1e-4;
 
 int Compute (FILE* input, FILE* output, float length);
 void ZeroArray (float array[], int size);
-void Read (float U[], float I[], int num, FILE* input);
+int Read (float U[], float I[], int num, FILE* input);
 void CountResistivity (float U[], float I[], float R[], float length);
 void Print (float R[], FILE* output, float length);
 int Message (FILE* input, FILE* output);
@@ -100,9 +100,18 @@ int Compute (FILE* input, FILE* output, float length)
 	ZeroArray (I, NMeas);
 	ZeroArray (R, NMeas);
 	
-    Read (U, I, NMeas, input);
+    int checkread = Read (U, I, NMeas, input);
+    
+    assert (checkread >= 0);
 
+    if (checkread > 0)
+        {
+        printf ("ERROR in data\n");
+        return (1); 
+        }
+    
     int check = CheckData (U, I);	
+
     assert (check >= 0);
 
 	if (check > 0)
@@ -144,9 +153,9 @@ void ZeroArray (float array[], int size)
 //=============================================================================
 
 /*!
-	\brief
-	Funcion that read file 
-	\param U[]
+    \brief
+    Funcion that read file 
+    \param U[]
     Array with value of voltage
     \param I[] 
 	Array with value of current
@@ -156,7 +165,7 @@ void ZeroArray (float array[], int size)
     Input file
 */ 
 
-void Read (float U[], float I[], int size, FILE* input)
+int Read (float U[], float I[], int size, FILE* input)
 	{
     assert (size > 0);
 
@@ -164,8 +173,12 @@ void Read (float U[], float I[], int size, FILE* input)
 		{
 		assert ((0 <= line) && (line < size));
 
-		fscanf (input, "%f %f", &U[line], &I[line]);
+		int check = fscanf (input, "%f %f", &U[line], &I[line]);
+    
+        if (check != 2) return (1);
+         
 		}
+    return (0);
 	}
 
 //=============================================================================
@@ -185,8 +198,9 @@ int CheckData (float U[], float I[])
 		{
 		assert ((0 <= line) && (line < NMeas));
 
-		if ((U[line] - Tolerance <= 0) || (I[line] - Tolerance <= 0) || (U[line] > MaxU - Tolerance) || (I[line] > MaxI - Tolerance))
+		if ((U[line] <= 0) || (I[line] <= 0) || (U[line] > MaxU ) || (I[line] > MaxI ))
 			{  
+            printf ("%f", U[line]);
 			return (1);
 			}
         }
