@@ -198,7 +198,7 @@ int CheckData (float U[], float I[])
         {
 	assert ((0 <= line) && (line < NMeas));
 
-	if ((U[line] < 0) || ((I[line] > 0.0 - Tolerance) && (I[line] < 0.0 + Tolerance)) || (U[line] > MaxU ) || (I[line] > MaxI ))
+	if ((U[line] < 0) || ((I[line] > 0.0 - Tolerance) && (I[line] < 0.0 + Tolerance)) || (U[line] > MaxU + Tolerance) || (I[line] > MaxI + Tolerance))
 	    {  
             printf ("%f", U[line]);
 	    return (1);
