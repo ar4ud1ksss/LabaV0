@@ -40,7 +40,7 @@ int Message (FILE* input, FILE* output);
 int CheckData (float U[], float I[]);
 
 int main ()
-	{
+    {
     printf ("#Laba 1.1.1 \n"
                 "#(c) Kirill Shcherbina 2k!8\n\n");
 
@@ -78,7 +78,7 @@ int main ()
     
     return (0);
     	
-	}
+    }
 
 //=============================================================================
 
