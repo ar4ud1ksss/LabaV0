@@ -72,7 +72,9 @@ int main ()
     if (correct3 == 1) return (1);
  
     printf ("Result saved in file 'Babka-labka.txt'\n");
-    
+
+    fclose (input);
+    fclose (output);    
     
     return (0);
     	
