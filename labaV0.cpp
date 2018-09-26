@@ -6,7 +6,7 @@
 	//\details
 	It read file with data, process them and write result in file.
 	The data in the file should be stored in the format of 36 pairs of numbers of current and voltage.
-    If input or output file not fond, program print you error.
+	If input or output file not fond, program print you error.
 	If the data file has error, then program print you error in the file.
 */
 
