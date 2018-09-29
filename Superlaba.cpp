@@ -107,7 +107,7 @@ int main ()
     if (message == ERROR1) return (ERROR1);
 
     
-    printf ("Please enter name of file with dimetre\n");
+    printf ("\nPlease enter name of file with dimetre\n");
     scanf ("%s", filediameter);
 
     FILE* diameter  = fopen (filediameter,"r");
@@ -119,7 +119,7 @@ int main ()
     if (message == ERROR1) return (ERROR1);
 
 
-    printf ("Please enter name of CSV file wiith sorted data\n");
+    printf ("\nPlease enter name of CSV file wiith sorted data\n");
     scanf ("%s", fileCSV);
 
     FILE* CSV  = fopen (fileCSV,"w");
@@ -155,7 +155,6 @@ int main ()
 
     float ro1 = 0, errorRo1 = 0, ro2 = 0, errorRo2 = 0, ro3 = 0, errorRo3 = 0;    
 
-    
     int correct = Compute (input, output, Length1, NUM1, CSV, square, errorS, &ro1, &errorRo1);
 
     assert (correct >= 0);
@@ -180,7 +179,7 @@ int main ()
 	float errorRoTotal = (errorRo1 + errorRo2 + errorRo3)/3;
 
  
-    printf ("Result saved in file '%s'\n", fileoutput);
+    printf ("\nResult saved in file '%s'\n", fileoutput);
 
     fprintf (output,"\n\nTotal value resistivity (%3.2f+-%3.2f) * 10^(-4)Om * cm", roTotal, errorRoTotal); 
 
@@ -271,6 +270,14 @@ int Compute (FILE* input, FILE* output, float length, int num, FILE* CSV, float 
 	TotalR (resistanceAvg, &rTotal, ro, square , length);
 
     TotalErrorRo (*ro, errorR, rTotal, errorRo, errorS, length);
+    
+    fprintf (output,"\nFor length = %3.0f cm\n",length);
+    fprintf (output,"Ravg = %5.3f Om\n", resistanceAvg); 
+    fprintf (output,"Rtot = %5.3f Om\n", rTotal);
+    fprintf (output,"ErrorRand = %5.3f Om\n", errorRrandom);
+    fprintf (output,"ErrorSys = %5.3f Om\n", errorRsystem);
+    fprintf (output,"ErrorTot = %5.3f Om\n", errorR);
+    fprintf (output,"Ro = %5.2f\t, ErrorRo = %5.2f\n\n", *ro, *errorRo); 
 
 
     PrintCSV (U, I, CSV);
@@ -588,5 +595,7 @@ void TotalErrorRo (float ro, float errorR, float rTotal, float* errorRo, float e
 	{
 	*errorRo = ro * sqrt((errorR / rTotal) * (errorR / rTotal) + (errorS * errorS) + (ErrorL / length) * (ErrorL / length));
 	}
+
+//=============================================================================
 
 
