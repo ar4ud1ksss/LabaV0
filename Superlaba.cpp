@@ -34,33 +34,33 @@ const int MaxU            = 601;
 const float Tolerance     = 1e-4;
                                         /// Code of error №1 (problem with open files)
 const int ERROR1          = 1; 
-                                        /// Code of error №2 (problem with data in ibput file)
+                                        /// Code of error №2 (problem with data in input file)
 const int ERROR2          = 2;    
-                                        /// String for read name of files from user
-const int String          = 20;
+                                        /// Length of string for read name of files from user
+const int LengthFilename  = 20;
                                         /// 1st string of 1st 12 measurements
-const int NUM1            = 0;                     
+const int Number1stMeas            = 0;                     
                                         /// 1st string of 2nd 12 measurements
-const int NUM2            = 12;
+const int Number2ndMeas            = 12;
                                         /// 1st string of 3ed 12 measurments
-const int NUM3            = 24;
- 				        /// Max value resistance
+const int Number3edMeas   = 24;
+    					                /// Max value resistance
 const float MaxResistance = 10; 
-    			                /// Max value error
+    					                /// Max value error
 const float MaxError      = 1; 
-    			                /// Error voltmeter (mV)  
+    					                /// Error voltmeter (mV)  
 const float ErrorU        = 1.2;             		
-    				        /// Error ampermeter (mA) 
+    					                /// Error ampermeter (mA) 
 const float ErrorI        = 1.2; 
                                         /// Error diametre (mm)
 const float ErrorD        = 0.01;                  	
-	     	                        /// Error length (cm)
+					                    /// Error length (cm)
 const float ErrorL        = 0.1;             		
-		                        /// Number value of diameter
+					                    /// Number value of diameter
 const int   NumD          = 10; 
-   		                        /// Resistance voltmeter (Om) 
-const int   RU            = 4000;  
-    			                /// Number Pi
+					                    /// Resistance voltmeter (Om) 
+const int   ResistanceU   = 4000;  
+    					                /// Number Pi
 const float Pi            = 3.14;       				
 
 //=============================================================================
@@ -78,6 +78,7 @@ void System (float maxU, float maxI, float resistanceAvg, float* errorRsystem);
 void TotalErrorR (float errorRrandom, float errorRsystem ,float* errorR);
 void TotalR (float resistanceAvg, float* rTotal, float* ro, float s, int length);
 void TotalErrorRo (float ro, float errorR, float rTotal, float* errorRo, float errorS, int length);
+void Print (float ro1, float ro2, float ro3, char* fileoutput, float errorRo1, float errorRo2, float errorRo3, FILE* output);
 
 
 //=============================================================================
@@ -89,10 +90,10 @@ int main ()
     printf ("#Laba 1.1.1 \n"
                 "#(c) Kirill Shcherbina 2k!8\n\n");
 
-    char fileinput [String] ;
-    char fileoutput[String] ;
-    char filediameter[String] ;
-    char fileCSV[String] ;
+    char fileinput [LengthFilename] ;
+    char fileoutput[LengthFilename] ;
+    char filediameter[LengthFilename] ;
+    char fileCSV[LengthFilename] ;
 
 
     printf ("Please enter name of file with data\n");
@@ -155,34 +156,28 @@ int main ()
 
     float ro1 = 0, errorRo1 = 0, ro2 = 0, errorRo2 = 0, ro3 = 0, errorRo3 = 0;    
 
-    int correct = Compute (input, output, Length1, NUM1, CSV, square, errorS, &ro1, &errorRo1);
+    int correct = Compute (input, output, Length1, Number1stMeas, CSV, square, errorS, &ro1, &errorRo1);
 
     assert (correct >= 0);
 
     if (correct > 0) return (ERROR2);
    
     
-    correct = Compute (input, output, Length2, NUM2, CSV, square, errorS, &ro2, &errorRo2);
+    correct = Compute (input, output, Length2, Number2ndMeas, CSV, square, errorS, &ro2, &errorRo2);
 
     assert (correct >= 0);
 
     if (correct > 0) return (ERROR2);
 
 
-    correct = Compute (input, output, Length3, NUM3, CSV, square, errorS, &ro3, &errorRo3);
+    correct = Compute (input, output, Length3, Number3edMeas, CSV, square, errorS, &ro3, &errorRo3);
     
     assert (correct >= 0);
     
     if (correct > 0) return (ERROR2);
 
-    float roTotal = (ro1 + ro2 + ro3)/3;
-    float errorRoTotal = (errorRo1 + errorRo2 + errorRo3)/3;
-
+    Print (ro1, ro2, ro3, fileoutput, errorRo1, errorRo2, errorRo3, output);
  
-    printf ("\nResult saved in file '%s'\n", fileoutput);
-
-    fprintf (output,"\n\nTotal value resistivity (%3.2f+-%3.2f) * 10^(-4)Om * cm", roTotal, errorRoTotal); 
-
     fclose (input);
     fclose (output);
     fclose (diameter);
@@ -257,19 +252,37 @@ int Compute (FILE* input, FILE* output, float length, int num, FILE* CSV, float 
     float resistanceAvg = 0;
     Avg (sumUI, sumII, &resistanceAvg);
 
+    assert (resistanceAvg > 0);
+
+
     float errorRrandom = 0;   
     RandomError (resistanceAvg, sumUU, sumII, &errorRrandom);
+
+    assert (errorRrandom > 0);
+
      
     float errorRsystem = 0;
     System (maxU, maxI, resistanceAvg, &errorRsystem);
 
+    assert (errorRsystem > 0);
+
+
     float errorR = 0;
     TotalErrorR (errorRrandom, errorRsystem, &errorR);
+
+    assert (errorR > 0);
+
     
     float rTotal = 0;
-    TotalR (resistanceAvg, &rTotal, ro, square , length);
+	TotalR (resistanceAvg, &rTotal, ro, square , length);
+
+    assert (rTotal > 0);
+
 
     TotalErrorRo (*ro, errorR, rTotal, errorRo, errorS, length);
+
+    assert (ro > 0);
+
     
     fprintf (output,"\nFor length = %3.0f cm\n",length);
     fprintf (output,"Ravg = %5.3f Om\n", resistanceAvg); 
@@ -311,13 +324,13 @@ int ReadAndCheck (float U[], float I[], int size, FILE* input)
 	    {
 	    assert ((0 <= line) && (line < size));
 
-            fgets (str, sizeof (str) - 1, input);
+        fgets (str, sizeof (str) - 1, input);
 
-            int check = sscanf (str,"%f %f", &U[line], &I[line]);
+        int check = sscanf (str,"%f %f", &U[line], &I[line]);
 
-            assert ((check >= -1) && (check <= 2));
+        assert ((check >= -1) && (check <= 2));
 
-            if (check != 2) return (line + 1);
+        if (check != 2) return (line + 1);
          
 	    }
 
@@ -365,17 +378,17 @@ int CheckData (float U[], float I[])
 */
 
 int Diameter (float* s, float* errorS, FILE* diameter)
-    {	
+	{	
     float D[NumD] = {} ;
-    float sumD = 0, dAvg = 0;
+	float sumD = 0, dAvg = 0;
     
     char str[1024] = "";
 	
     for (int line = 0; line < NumD; line++)
-	{
+		{
         fgets (str, sizeof (str) - 1, diameter);
 
-	int check = sscanf (str,"%f", &D[line]);
+		int check = sscanf (str,"%f", &D[line]);
 
         assert (check >= -1);        
 
@@ -385,12 +398,14 @@ int Diameter (float* s, float* errorS, FILE* diameter)
             return (ERROR2);
             }        
             
-	sumD += D[line];
-	}
+		sumD += D[line];
+		}
 	
 	dAvg = sumD / NumD;
 	*s = Pi * dAvg * dAvg * 100 / 4;
 	*errorS = 2 * ErrorD / dAvg;
+
+    assert ((*s > 0) && (*errorS > 0));
     
     return (0);
 	}
@@ -409,39 +424,42 @@ int Diameter (float* s, float* errorS, FILE* diameter)
 */
 
 void PrintCSV (float U[], float I[], FILE* CSV)
-    {
-    for (int i = 0; i < NMeas; i++)
 	{
-	assert ((0 <= i) && (i < NMeas));
-	
-	fprintf (CSV,"%4.1f %5.2f\n", U[i], I[i]);
-	}
+	for (int i = 0; i < NMeas; i++)
+		{
+		assert ((0 <= i) && (i < NMeas));
+		
+		fprintf (CSV,"%4.1f %5.2f\n", U[i], I[i]);
+		}
     fprintf (CSV,"\n");
-    }
+	}
 
 
 
 //=============================================================================
 
 /*!
-    \brief
-    Funcion that count summ of U^2, I^2, U * I 
-    \param U[]
+	\brief
+	Funcion that count summ of U^2, I^2, U * I 
+	\param U[]
     Array with data of voltage
     \param I[]
     Array with data of current
-    \param sumUI 
-    ammount of multiplication current and voltage
-    \param sumII 
-    ammount of current^2
-    \param resistanceAvg 
-    Averadge value resistance 
+	\param sumUI 
+	ammount of multiplication current and voltage
+	\param sumII 
+	ammount of current^2
+	\param resistanceAvg 
+	Averadge value resistance 
 */
 
 void Processing (float U[], float I[], float* sumUI, float* sumUU, float* sumII)
 	{
 	for (int i = 0; i < NMeas; i++)                                       
 		{
+
+        assert ((0 <= i) && (i < NMeas));    
+
 		*sumUI += U[i] * I[i];
 		*sumII += I[i] * I[i];
 		*sumUU += U[i] * U[i]; 
@@ -464,6 +482,8 @@ void Processing (float U[], float I[], float* sumUI, float* sumUU, float* sumII)
 
 void Avg (float sumUI, float sumII, float* resistanceAvg)
 	{
+    assert ((sumUI > 0) && (sumII > 0));  
+
 	*resistanceAvg = sumUI / sumII;
 
 	assert ((0 < *resistanceAvg) && (*resistanceAvg < MaxResistance)); 
@@ -485,6 +505,8 @@ void Avg (float sumUI, float sumII, float* resistanceAvg)
 */
 void RandomError (float resistanceAvg, float sumUU,float sumII, float* errorRrandom)
 	{
+    assert ((resistanceAvg > 0) && (sumUU > 0) && (sumII > 0)); 
+
 	float sqrtN = sqrt(NMeas);
 	*errorRrandom = (sqrt((sumUU / sumII) - (resistanceAvg * resistanceAvg))) / sqrtN;
 
@@ -528,7 +550,11 @@ void System (float maxU, float maxI, float resistanceAvg, float* errorRsystem)
 */
 void TotalErrorR (float errorRrandom, float errorRsystem ,float* errorR)
 	{
+    assert ((errorRrandom > 0) && ( errorRsystem > 0));
+
 	*errorR = sqrt(errorRrandom * errorRrandom + errorRsystem * errorRsystem);
+
+    assert (*errorR > 0);
 	}
 
 //=============================================================================
@@ -549,8 +575,12 @@ void TotalErrorR (float errorRrandom, float errorRsystem ,float* errorR)
 */
 void TotalR (float resistanceAvg, float* rTotal, float* ro, float s, int length)
 	{
-	*rTotal = resistanceAvg + (resistanceAvg * resistanceAvg) / RU;
+    assert ((resistanceAvg > 0) && (s > 0) && (length > 0));
+
+	*rTotal = resistanceAvg + (resistanceAvg * resistanceAvg) / ResistanceU;
 	*ro = *rTotal * s / length;
+
+    assert ((rTotal > 0) && (ro > 0));
 	}
 
 //=============================================================================
@@ -568,16 +598,31 @@ void TotalR (float resistanceAvg, float* rTotal, float* ro, float s, int length)
 	Value error for resistivity
 	\param errorS
 	Value error for square of wire
-        \param length
-        Length of wire (cm)
+    \param length
+    Length of wire (cm)
     
 */
 
 void TotalErrorRo (float ro, float errorR, float rTotal, float* errorRo, float errorS, int length)
 	{
+    assert ((ro > 0) && (errorR > 0) && (rTotal > 0) && (errorS > 0) && (length > 0));
+    
 	*errorRo = ro * sqrt((errorR / rTotal) * (errorR / rTotal) + (errorS * errorS) + (ErrorL / length) * (ErrorL / length));
-	}
+
+    assert ( errorRo > 0);	
+    }
 
 //=============================================================================
 
+void Print (float ro1, float ro2, float ro3, char* fileoutput, float errorRo1, float errorRo2, float errorRo3, FILE* output)
+    {
+    assert ((ro1 > 0) && (ro2 > 0) && (ro3 > 0) && (fileoutput != "\0") && (errorRo1 > 0) && (errorRo2 > 0) && (errorRo3 > 0) && (output != NULL));
 
+    float roTotal = (ro1 + ro2 + ro3)/3;
+	float errorRoTotal = (errorRo1 + errorRo2 + errorRo3)/3;
+
+ 
+    printf ("\nResult saved in file '%s'\n", fileoutput);
+
+    fprintf (output,"\n\nTotal value resistivity (%3.2f+-%3.2f) * 10^(-4)Om * cm", roTotal, errorRoTotal); 
+    }
